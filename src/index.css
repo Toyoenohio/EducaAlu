@@ -1,0 +1,130 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&family=Plus+Jakarta+Sans:wght@700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    font-family: 'Montserrat', sans-serif;
+    background-color: #fcf9f8;
+    color: #1c1b1b;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #f0edec;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #c6c5d9;
+    border-radius: 9999px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #767587;
+  }
+}
+
+@layer components {
+  .glass-card {
+    @apply bg-white/70 backdrop-blur-md border border-outline-variant/30 shadow-lg;
+  }
+
+  .btn-primary {
+    @apply bg-primary text-on-primary font-jakarta font-bold text-label-bold
+           px-6 py-3 rounded-xl
+           hover:bg-primary-container hover:shadow-lg
+           active:scale-[0.98]
+           transition-all duration-200 ease-out;
+  }
+
+  .btn-secondary {
+    @apply bg-secondary-fixed text-on-secondary-fixed font-jakarta font-bold text-label-bold
+           px-6 py-3 rounded-xl
+           hover:bg-secondary hover:text-on-secondary hover:shadow-lg
+           active:scale-[0.98]
+           transition-all duration-200 ease-out;
+  }
+
+  .btn-outline {
+    @apply border-2 border-primary text-primary font-jakarta font-bold text-label-bold
+           px-6 py-3 rounded-xl
+           hover:bg-primary hover:text-on-primary
+           active:scale-[0.98]
+           transition-all duration-200 ease-out;
+  }
+
+  .card {
+    @apply bg-surface-container-lowest rounded-2xl border border-outline-variant/20
+           shadow-sm hover:shadow-md transition-shadow duration-300;
+  }
+
+  .card-elevated {
+    @apply bg-surface-container-lowest rounded-2xl
+           shadow-md hover:shadow-xl transition-all duration-300
+           hover:-translate-y-0.5;
+  }
+
+  .input-field {
+    @apply w-full px-4 py-3 rounded-xl
+           bg-surface-container-low border border-outline-variant/40
+           text-on-surface font-montserrat text-body-md
+           placeholder:text-on-surface-variant/50
+           focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary
+           transition-all duration-200;
+  }
+
+  .badge {
+    @apply inline-flex items-center px-3 py-1 rounded-full
+           text-xs font-jakarta font-bold;
+  }
+
+  .badge-success {
+    @apply badge bg-secondary-fixed/20 text-secondary;
+  }
+
+  .badge-warning {
+    @apply badge bg-tertiary-fixed/30 text-tertiary;
+  }
+
+  .badge-error {
+    @apply badge bg-error-container text-on-error-container;
+  }
+
+  .badge-info {
+    @apply badge bg-primary-fixed/30 text-primary;
+  }
+
+  .page-title {
+    @apply font-montserrat text-headline-md text-on-surface;
+  }
+
+  .section-title {
+    @apply font-montserrat text-xl font-bold text-on-surface;
+  }
+}
+
+@layer utilities {
+  .animate-stagger-1 { animation-delay: 0.05s; }
+  .animate-stagger-2 { animation-delay: 0.1s; }
+  .animate-stagger-3 { animation-delay: 0.15s; }
+  .animate-stagger-4 { animation-delay: 0.2s; }
+  .animate-stagger-5 { animation-delay: 0.25s; }
+}
