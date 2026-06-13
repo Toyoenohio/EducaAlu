@@ -1,45 +1,38 @@
-import { useState, useEffect } from 'react'
+import { useMemo } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 
 export function useMisPagos() {
   const { user } = useAuth()
-  const [pagos, setPagos] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
 
-  const fetchPagos = async () => {
-    if (!user?.alumno_id) return
-    setLoading(true)
-    setError(null)
-    const { data, error: err } = await supabase
-      .from('pagos')
-      .select(`
-        *,
-        inscripcion:inscripcion_id(
-          alumno_id,
-          seccion:seccion_id(
-            codigo,
-            curso_sede:curso_sede_id(
-              curso:curso_id(nombre)
+  const { data: pagos = [], isLoading: loading, error, refetch } = useQuery({
+    queryKey: ['mis-pagos', user?.alumno_id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('pagos')
+        .select(`
+          *,
+          inscripcion:inscripcion_id(
+            alumno_id,
+            seccion:seccion_id(
+              codigo,
+              curso_sede:curso_sede_id(
+                curso:curso_id(nombre)
+              )
             )
           )
-        )
-      `)
-      .order('anio', { ascending: false })
-      .order('mes', { ascending: false })
-    if (err) setError(err.message)
-    else {
-      const misPagos = (data || []).filter(p => p.inscripcion?.alumno_id === user.alumno_id)
-      setPagos(misPagos)
-    }
-    setLoading(false)
-  }
+        `)
+        .order('anio', { ascending: false })
+        .order('mes', { ascending: false })
+      if (error) throw error
+      return (data || []).filter(p => p.inscripcion?.alumno_id === user.alumno_id)
+    },
+    enabled: !!user?.alumno_id,
+  })
 
-  const pendientes = pagos.filter(p => !p.pagado)
-  const completados = pagos.filter(p => p.pagado)
+  const pendientes = useMemo(() => pagos.filter(p => !p.pagado), [pagos])
+  const completados = useMemo(() => pagos.filter(p => p.pagado), [pagos])
 
-  useEffect(() => { fetchPagos() }, [user])
-
-  return { pagos, pendientes, completados, loading, error, refetch: fetchPagos }
+  return { pagos, pendientes, completados, loading, error: error?.message || null, refetch }
 }

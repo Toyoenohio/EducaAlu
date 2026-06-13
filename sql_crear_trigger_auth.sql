@@ -34,7 +34,8 @@ BEGIN
         'user_metadata', jsonb_build_object(
           'role', 'estudiante',
           'alumno_id', NEW.id,
-          'nombre', COALESCE(NEW.nombre, '') || ' ' || COALESCE(NEW.apellido, '')
+          'nombre', COALESCE(NEW.nombre, '') || ' ' || COALESCE(NEW.apellido, ''),
+          'requires_password_change', true  -- ⚠️ FORZAR CAMBIO DE CONTRASEÑA EN PRIMER LOGIN
         )
       )
     ) INTO request_id;
@@ -58,18 +59,20 @@ CREATE TRIGGER on_alumno_created
 -- 
 -- 1. CONTRASEÑA INICIAL: 
 --    Se usa la CÉDULA del alumno como contraseña inicial.
---    El alumno debe cambiarla al primer login (puedes agregar esa lógica después).
---    Si prefieres otro password por defecto, modifica la línea:
---    'password', COALESCE(NEW.cedula, 'educa2026')
+--    El alumno DEBE cambiarla en su primer inicio de sesión gracias al flag
+--    requires_password_change: true en user_metadata.
 --
--- 2. FLUJO:
+-- 2. FLUJO COMPLETO:
 --    Admin crea alumno (nombre, email, cédula, etc.)
 --    → Trigger se dispara automáticamente
 --    → Se crea usuario en Supabase Auth con:
 --       - Email: el email del alumno
 --       - Password: la cédula del alumno
---       - Metadata: { role: "estudiante", alumno_id: "uuid", nombre: "..." }
---    → El estudiante puede iniciar sesión en el portal con su email + cédula
+--       - Metadata: { role: "estudiante", alumno_id: "uuid", requires_password_change: true }
+--    → El estudiante inicia sesión con su email + cédula
+--    → El frontend detecta requires_password_change y redirige a /force-password-change
+--    → El estudiante establece una nueva contraseña segura
+--    → El flag se pone en false y puede usar el portal normalmente
 --
 -- 3. SEGURIDAD:
 --    - La function usa SECURITY DEFINER para ejecutar con permisos elevados
@@ -85,7 +88,9 @@ CREATE TRIGGER on_alumno_created
 --    Luego intenta hacer login en el portal estudiantil con:
 --    Email: test@ejemplo.com
 --    Password: V-99999999
+--    → Deberías ser redirigido a la página de cambio de contraseña
 --
 -- 5. VERIFICAR QUE FUNCIONÓ:
 --    SELECT * FROM auth.users WHERE email = 'test@ejemplo.com';
---    Deberías ver el usuario con raw_user_meta_data conteniendo alumno_id y role.
+--    Deberías ver el usuario con raw_user_meta_data conteniendo:
+--    { "role": "estudiante", "alumno_id": "...", "requires_password_change": true }

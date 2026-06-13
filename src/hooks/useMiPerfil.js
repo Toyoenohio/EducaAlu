@@ -1,28 +1,23 @@
-import { useState, useEffect } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 
 export function useMiPerfil() {
   const { user } = useAuth()
-  const [perfil, setPerfil] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
 
-  const fetchPerfil = async () => {
-    if (!user?.alumno_id) return
-    setLoading(true)
-    setError(null)
-    const { data, error: err } = await supabase
-      .from('alumnos')
-      .select('*')
-      .eq('id', user.alumno_id)
-      .single()
-    if (err) setError(err.message)
-    else setPerfil(data)
-    setLoading(false)
-  }
+  const { data: perfil = null, isLoading: loading, error, refetch } = useQuery({
+    queryKey: ['mi-perfil', user?.alumno_id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('alumnos')
+        .select('*')
+        .eq('id', user.alumno_id)
+        .single()
+      if (error) throw error
+      return data
+    },
+    enabled: !!user?.alumno_id,
+  })
 
-  useEffect(() => { fetchPerfil() }, [user])
-
-  return { perfil, loading, error, refetch: fetchPerfil }
+  return { perfil, loading, error: error?.message || null, refetch }
 }

@@ -6,18 +6,20 @@ import { useMiPerfil } from '../hooks/useMiPerfil'
 import StatsCards from '../components/Dashboard/StatsCards'
 import ProximosPagos from '../components/Dashboard/ProximosPagos'
 import HorarioHoy from '../components/Dashboard/HorarioHoy'
-import { Sparkles, Loader2 } from 'lucide-react'
+import { SkeletonStats, SkeletonCard } from '../components/ui/Skeleton'
+import ErrorCard from '../components/ui/ErrorCard'
+import { Sparkles } from 'lucide-react'
 
 export default function Dashboard() {
   const { user } = useAuth()
   const { perfil } = useMiPerfil()
-  const { activos, historial, loading: cursosLoading } = useMisCursos()
-  const { pendientes, loading: pagosLoading } = useMisPagos()
+  const { activos, historial, loading: cursosLoading, error: cursosError, refetch: refetchCursos } = useMisCursos()
+  const { pendientes, loading: pagosLoading, error: pagosError, refetch: refetchPagos } = useMisPagos()
   const { resumenPorCurso, loading: notasLoading } = useMisNotas()
 
   const isLoading = cursosLoading || pagosLoading || notasLoading
+  const hasError = cursosError || pagosError
 
-  // Calculate overall attendance %
   const totalAsistencia = Object.values(resumenPorCurso).reduce(
     (acc, r) => ({ total: acc.total + r.total, presente: acc.presente + r.presente + r.tardanza }),
     { total: 0, presente: 0 }
@@ -44,7 +46,6 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6 sm:space-y-8">
-      {/* Greeting */}
       <div className="animate-fade-in">
         <div className="flex items-center gap-2 mb-1">
           <Sparkles className="w-5 h-5 text-tertiary" />
@@ -58,15 +59,22 @@ export default function Dashboard() {
         </p>
       </div>
 
-      {/* Stats */}
-      {isLoading ? (
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="w-6 h-6 text-primary animate-spin" />
-        </div>
+      {hasError ? (
+        <ErrorCard
+          message={cursosError || pagosError}
+          onRetry={() => { refetchCursos(); refetchPagos(); }}
+        />
+      ) : isLoading ? (
+        <>
+          <SkeletonStats />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+            <SkeletonCard />
+            <SkeletonCard />
+          </div>
+        </>
       ) : (
         <>
           <StatsCards stats={stats} />
-
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
             <HorarioHoy cursos={activos} />
             <ProximosPagos pagos={pendientes} />

@@ -1,8 +1,10 @@
 import { useMiPerfil } from '../hooks/useMiPerfil'
 import PerfilCard from '../components/Perfil/PerfilCard'
+import ErrorCard from '../components/ui/ErrorCard'
+import { SkeletonProfile } from '../components/ui/Skeleton'
 
 export default function MiPerfil() {
-  const { perfil, loading, error } = useMiPerfil()
+  const { perfil, loading, error, refetch } = useMiPerfil()
 
   return (
     <div className="max-w-lg mx-auto space-y-6">
@@ -13,13 +15,13 @@ export default function MiPerfil() {
         </p>
       </div>
 
-      {error && (
-        <div className="p-4 bg-error-container/50 border border-error/20 rounded-xl animate-fade-in">
-          <p className="text-sm text-on-error-container">{error}</p>
-        </div>
+      {error ? (
+        <ErrorCard message={error} onRetry={refetch} />
+      ) : loading ? (
+        <SkeletonProfile />
+      ) : (
+        <PerfilCard perfil={perfil} loading={false} />
       )}
-
-      <PerfilCard perfil={perfil} loading={loading} />
     </div>
   )
 }
