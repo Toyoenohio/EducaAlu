@@ -10,7 +10,26 @@ export function AuthProvider({ children }) {
   const queryClient = useQueryClient()
 
   useEffect(() => {
-    getUserWithRole().then(setUser).finally(() => setLoading(false))
+    let timeoutId
+    let isMounted = true
+
+    // Safety timeout: force loading=false after 8s if Supabase hangs
+    timeoutId = setTimeout(() => {
+      if (isMounted) {
+        console.warn('AuthContext: getSession() timed out after 8s, forcing loading=false')
+        setLoading(false)
+      }
+    }, 8000)
+
+    getUserWithRole().then((userWithRole) => {
+      clearTimeout(timeoutId)
+      if (isMounted) setUser(userWithRole)
+    }).catch((err) => {
+      console.error('getUserWithRole() failed:', err)
+      clearTimeout(timeoutId)
+    }).finally(() => {
+      if (isMounted) setLoading(false)
+    })
 
     const { data: listener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
@@ -25,7 +44,11 @@ export function AuthProvider({ children }) {
         }
       }
     )
-    return () => listener.subscription.unsubscribe()
+    return () => {
+      isMounted = false
+      clearTimeout(timeoutId)
+      listener.subscription.unsubscribe()
+    }
   }, [queryClient])
 
   const login = async (email, password, captchaToken = null) => {
