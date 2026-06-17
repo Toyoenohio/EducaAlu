@@ -13,13 +13,13 @@ export function AuthProvider({ children }) {
     let timeoutId
     let isMounted = true
 
-    // Safety timeout: force loading=false after 8s if Supabase hangs
+    // Safety timeout: force loading=false after 3s if Supabase hangs
     timeoutId = setTimeout(() => {
       if (isMounted) {
-        console.warn('AuthContext: getSession() timed out after 8s, forcing loading=false')
+        console.warn('AuthContext: getSession() timed out, forcing loading=false')
         setLoading(false)
       }
-    }, 8000)
+    }, 3000)
 
     getUserWithRole().then((userWithRole) => {
       clearTimeout(timeoutId)
