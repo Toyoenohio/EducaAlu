@@ -4,13 +4,23 @@ const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
 const STORAGE_KEY = 'educa-alu-auth'
+const DB_TIMEOUT_MS = 15000 // 15 segundos máximo para cualquier query
+
+function fetchWithTimeout(url, options = {}) {
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), DB_TIMEOUT_MS)
+  return fetch(url, { ...options, signal: controller.signal }).finally(() => clearTimeout(timeoutId))
+}
 
 export const supabase = createClient(supabaseUrl, supabaseKey, {
   auth: {
     storageKey: STORAGE_KEY,
     autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: false, // email/password auth, no OAuth URL tokens
+    detectSessionInUrl: false,
+  },
+  global: {
+    fetch: fetchWithTimeout,
   },
 })
 
