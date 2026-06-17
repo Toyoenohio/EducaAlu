@@ -10,8 +10,22 @@ const tabs = [
 ]
 
 export default function MisPagos() {
-  const { pendientes, completados, loading, error } = useMisPagos()
+  const {
+    obligaciones,
+    pendientes,
+    vencidas,
+    completados,
+    totalPendiente,
+    totalVencido,
+    loading,
+    error,
+    registrarPago,
+    isRegistering,
+  } = useMisPagos()
+
   const [activeTab, setActiveTab] = useState('pendientes')
+
+  const countPendientes = pendientes.length + vencidas.length
 
   return (
     <div className="space-y-6">
@@ -21,7 +35,7 @@ export default function MisPagos() {
           <div>
             <h1 className="page-title">Mis Pagos</h1>
             <p className="text-on-surface-variant text-sm mt-0.5">
-              Revisa tus pagos pendientes e historial de pagos
+              Revisa y paga tus obligaciones pendientes
             </p>
           </div>
         </div>
@@ -32,7 +46,7 @@ export default function MisPagos() {
         {tabs.map((tab) => {
           const Icon = tab.icon
           const isActive = activeTab === tab.key
-          const count = tab.key === 'pendientes' ? pendientes.length : completados.length
+          const count = tab.key === 'pendientes' ? countPendientes : completados.length
 
           return (
             <button
@@ -78,7 +92,17 @@ export default function MisPagos() {
         </div>
       ) : (
         <div className="animate-fade-in">
-          {activeTab === 'pendientes' && <PagosPendientes pagos={pendientes} />}
+          {activeTab === 'pendientes' && (
+            <PagosPendientes
+              obligaciones={obligaciones}
+              pendientes={pendientes}
+              vencidas={vencidas}
+              totalPendiente={totalPendiente}
+              totalVencido={totalVencido}
+              registrarPago={registrarPago}
+              isRegistering={isRegistering}
+            />
+          )}
           {activeTab === 'historial' && (
             <div className="card overflow-hidden">
               <HistorialPagos pagos={completados} />
