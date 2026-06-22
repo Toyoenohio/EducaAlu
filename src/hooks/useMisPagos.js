@@ -109,7 +109,40 @@ export function useMisPagos() {
     [pagos]
   )
 
-  // ── REGISTRAR PAGO (misma Edge Function del admin) ──
+  // ── SOLICITAR CARNET ──
+  const solicitarCarnetMutation = useMutation({
+    mutationFn: async () => {
+      // Buscar la inscripción activa más reciente del alumno
+      const { data: inscripciones, error: inscError } = await supabase
+        .from('inscripciones')
+        .select('id')
+        .eq('alumno_id', alumnoId)
+        .in('estado', ['activa', 'en_curso'])
+        .order('created_at', { ascending: false })
+        .limit(1)
+
+      if (inscError) throw inscError
+      if (!inscripciones?.length) throw new Error('No tienes una inscripción activa para solicitar el carnet')
+
+      const inscripcionId = inscripciones[0].id
+
+      // Llamar a la Edge Function
+      const { data, error } = await supabase.functions.invoke('agregar-obligacion', {
+        body: { inscripcion_id: inscripcionId, concepto: 'certificado_carnet' },
+      })
+      if (error) throw error
+      return data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['mis-obligaciones'] })
+    },
+  })
+
+  // Verificar si ya tiene un carnet solicitado
+  const tieneCarnetPendiente = useMemo(
+    () => obligaciones.some(o => o.concepto === 'certificado_carnet'),
+    [obligaciones]
+  )
   const registrarPagoMutation = useMutation({
     mutationFn: async ({ inscripcion_id, monto, metodo_pago, referencia, obligacion_ids }) => {
       const { data, error } = await supabase.functions.invoke('registrar-pago', {
@@ -137,5 +170,8 @@ export function useMisPagos() {
     refetch,
     registrarPago: registrarPagoMutation.mutateAsync,
     isRegistering: registrarPagoMutation.isPending,
+    solicitarCarnet: solicitarCarnetMutation.mutateAsync,
+    isRequestingCarnet: solicitarCarnetMutation.isPending,
+    tieneCarnetPendiente,
   }
 }
