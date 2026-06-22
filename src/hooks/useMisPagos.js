@@ -128,7 +128,7 @@ export function useMisPagos() {
 
       // Llamar a la Edge Function
       const { data, error } = await supabase.functions.invoke('agregar-obligacion', {
-        body: { inscripcion_id: inscripcionId, concepto: 'certificado_carnet' },
+        body: { inscripcion_id: inscripcionId, concepto: 'carnet' },
       })
       if (error) throw error
       return data
@@ -140,7 +140,7 @@ export function useMisPagos() {
 
   // Verificar si ya tiene un carnet solicitado
   const tieneCarnetPendiente = useMemo(
-    () => obligaciones.some(o => o.concepto === 'certificado_carnet'),
+    () => obligaciones.some(o => o.concepto === 'carnet'),
     [obligaciones]
   )
   const registrarPagoMutation = useMutation({
